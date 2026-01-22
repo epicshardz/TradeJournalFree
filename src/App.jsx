@@ -122,7 +122,7 @@ function App() {
 
         .header-content {
           width: 100%;
-          max-width: 1200px;
+          max-width: 1400px;
           margin: 0 auto;
           display: flex;
           justify-content: space-between;
@@ -170,7 +170,7 @@ function App() {
         .app-main {
           flex: 1;
           width: 100%;
-          max-width: 1200px;
+          max-width: 1400px;
           margin: 0 auto;
           padding: 2rem 1.5rem;
         }
@@ -185,6 +185,10 @@ function App() {
           .logo-text {
             font-size: 1.1rem;
           }
+          .app-main {
+            padding: 1rem 0.5rem;
+            padding-bottom: 5rem;
+          }
           .header-nav {
             position: fixed;
             bottom: 0;
@@ -196,6 +200,7 @@ function App() {
             padding: 0.75rem;
             justify-content: space-around;
             height: 70px;
+            z-index: 1001;
           }
         }
       `}</style>

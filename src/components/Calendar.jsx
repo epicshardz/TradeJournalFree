@@ -87,15 +87,52 @@ const Calendar = () => {
         </div>
       )}
       <div className="calendar-header">
-        <div className="header-top">
-          <div className="month-nav">
-            <button onClick={handlePrevMonth} className="nav-arrow"><ChevronLeft size={20} /></button>
-            <h2>{format(currentDate, 'MMMM yyyy')}</h2>
-            <button onClick={handleNextMonth} className="nav-arrow"><ChevronRight size={20} /></button>
+        <div className="month-nav">
+          <button onClick={handlePrevMonth} className="nav-arrow"><ChevronLeft size={20} /></button>
+          <h2>{format(currentDate, 'MMMM yyyy')}</h2>
+          <button onClick={handleNextMonth} className="nav-arrow"><ChevronRight size={20} /></button>
+        </div>
+      </div>
+
+      <div className="calendar-main-layout">
+        <div className={`calendar-body card glass-effect ${monthGlowClass}`}>
+          <div className="week-header">
+            {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+              <div key={day} className="week-day">{day}</div>
+            ))}
+          </div>
+          <div className="days-canvas">
+            {days.map((day, idx) => {
+              const dayPnL = getDailyPnL(trades, day);
+              const dayTrades = getDayTrades(day);
+              const isSelected = selectedDate && isSameDay(day, selectedDate);
+              const currentMonth = isSameMonth(day, currentDate);
+              const statusClass = dayPnL > 0 ? 'win' : dayPnL < 0 ? 'loss' : dayPnL === 0 && dayTrades.length > 0 ? 'neutral' : '';
+              const isShaking = shakingDay === idx;
+
+              return (
+                <div
+                  key={idx}
+                  className={`day-box ${!currentMonth ? 'out-of-month' : ''} ${isSelected ? 'active' : ''} ${statusClass} ${isShaking ? 'shake' : ''}`}
+                  onClick={(e) => handleDayClick(day, idx, e)}
+                >
+                  <div className="box-top">
+                    <span className="date-num">{format(day, 'd')}</span>
+                    {dayTrades.length > 0 && <span className="trade-badge">{dayTrades.length}</span>}
+                  </div>
+
+                  <div className="box-content">
+                    <span className="pnl-text">
+                      {dayTrades.length > 0 ? (dayPnL >= 0 ? `+${dayPnL.toFixed(0)}` : dayPnL.toFixed(0)) : ''}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        <div className="stats-showcase">
+        <div className="stats-sidebar">
           <div className="stat-pill win">
             <div className="pill-icon"><TrendingUp size={16} /></div>
             <div className="pill-info">
@@ -110,43 +147,6 @@ const Calendar = () => {
               <span className="pill-value">{winRate.toFixed(1)}%</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className={`calendar-body card glass-effect ${monthGlowClass}`}>
-        <div className="week-header">
-          {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
-            <div key={day} className="week-day">{day}</div>
-          ))}
-        </div>
-        <div className="days-canvas">
-          {days.map((day, idx) => {
-            const dayPnL = getDailyPnL(trades, day);
-            const dayTrades = getDayTrades(day);
-            const isSelected = selectedDate && isSameDay(day, selectedDate);
-            const currentMonth = isSameMonth(day, currentDate);
-            const statusClass = dayPnL > 0 ? 'win' : dayPnL < 0 ? 'loss' : dayPnL === 0 && dayTrades.length > 0 ? 'neutral' : '';
-            const isShaking = shakingDay === idx;
-
-            return (
-              <div
-                key={idx}
-                className={`day-box ${!currentMonth ? 'out-of-month' : ''} ${isSelected ? 'active' : ''} ${statusClass} ${isShaking ? 'shake' : ''}`}
-                onClick={(e) => handleDayClick(day, idx, e)}
-              >
-                <div className="box-top">
-                  <span className="date-num">{format(day, 'd')}</span>
-                  {dayTrades.length > 0 && <span className="trade-badge">{dayTrades.length}</span>}
-                </div>
-
-                <div className="box-content">
-                  <span className="pnl-text">
-                    {dayTrades.length > 0 ? (dayPnL >= 0 ? `+${dayPnL.toFixed(0)}` : dayPnL.toFixed(0)) : '—'}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
 
@@ -230,15 +230,39 @@ const Calendar = () => {
           display: flex;
           flex-direction: column;
           gap: 2rem;
-          max-width: 1000px;
+          max-width: 1200px;
           margin: 0 auto;
+          width: 100%;
         }
 
         .calendar-header {
           display: flex;
-          flex-direction: column;
-          align-items: center;
+          justify-content: center;
+          margin-bottom: 1.5rem;
+        }
+
+        .calendar-main-layout {
+          display: flex;
           gap: 2rem;
+          align-items: flex-start;
+          width: 100%;
+        }
+
+        .calendar-body {
+          flex: 1;
+          min-width: 0; /* Allow grid to shrink if needed */
+          padding: 1.5rem;
+          border-radius: 24px;
+          position: relative;
+          transition: all 0.5s ease;
+        }
+
+        .stats-sidebar {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          width: 200px;
+          flex-shrink: 0;
         }
 
         .month-nav {
@@ -271,22 +295,22 @@ const Calendar = () => {
           border-color: #3b82f6;
         }
 
-        .stats-showcase {
-          display: flex;
-          gap: 1rem;
-          justify-content: center;
-          width: 100%;
-        }
-
         .stat-pill {
           background: rgba(255, 255, 255, 0.04);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          padding: 0.75rem 1.5rem;
+          padding: 1.25rem;
           border-radius: 20px;
           display: flex;
           align-items: center;
           gap: 1rem;
-          min-width: 180px;
+          width: 100%;
+          transition: all 0.3s ease;
+        }
+
+        .stat-pill:hover {
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.12);
+          transform: translateX(-4px);
         }
 
         .pill-icon {
@@ -654,24 +678,99 @@ const Calendar = () => {
         }
 
         @media (max-width: 768px) {
-          .calendar-header {
-            gap: 1.5rem;
+          .calendar-view {
+            padding: 0.25rem;
+            gap: 1rem;
           }
-          .stats-showcase {
+
+          .calendar-main-layout {
             flex-direction: column;
+            gap: 1rem;
           }
+
+          .stats-sidebar {
+            width: 100%;
+            flex-direction: row;
+            order: -1;
+            gap: 0.5rem;
+          }
+
           .stat-pill {
+            padding: 0.5rem 0.75rem;
             min-width: 0;
-          }
-          .days-canvas {
-            gap: 6px;
-          }
-          .day-box {
-            padding: 6px;
+            flex: 1;
             border-radius: 12px;
           }
+
+          .pill-icon {
+            width: 24px;
+            height: 24px;
+          }
+
+          .pill-label {
+            font-size: 0.6rem;
+          }
+
+          .pill-value {
+            font-size: 0.9rem;
+          }
+
+          .stat-pill:hover {
+            transform: translateY(-2px);
+          }
+
+          .month-nav h2 {
+            font-size: 1.25rem;
+            min-width: 150px;
+          }
+
+          .calendar-body {
+            padding: 0.5rem;
+            border-radius: 16px;
+          }
+
+          .week-header {
+            gap: 2px;
+            margin-bottom: 0.5rem;
+          }
+
+          .week-day {
+            font-size: 0.6rem;
+          }
+
+          .days-canvas {
+            gap: 2px;
+          }
+
+          .day-box {
+            padding: 2px;
+            border-radius: 6px;
+            aspect-ratio: 1;
+            min-width: 0;
+          }
+
+          .date-num {
+            font-size: 0.65rem;
+          }
+
+          .trade-badge {
+            padding: 1px 3px;
+            font-size: 0.55rem;
+            border-radius: 4px;
+          }
+
           .pnl-text {
-            font-size: 0.85rem;
+            font-size: 0.65rem;
+            letter-spacing: -0.02em;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .pnl-text {
+            font-size: 0.55rem;
+          }
+          .pill-label {
+            display: none;
           }
         }
       `}</style>

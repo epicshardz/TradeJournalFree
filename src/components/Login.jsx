@@ -87,7 +87,7 @@ const Login = () => {
             {error && <div className="error-message shake">{error}</div>}
 
             <button type="submit" className="submit-btn" disabled={loading}>
-              <span>{loading ? 'Processing...' : (isSignUp ? 'Create Premium Account' : 'Access Dashboard')}</span>
+              <span>{loading ? 'Processing...' : (isSignUp ? 'Create Free Account' : 'Access Dashboard')}</span>
               <ArrowRight size={18} />
             </button>
           </form>

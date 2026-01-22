@@ -1,16 +1,29 @@
-# React + Vite
+# TradeJournalFree
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A premium, high-performance trade tracking application designed for traders who value speed, aesthetics, and data persistence. Built with React and Supabase, it offers a seamless way to log, track, and analyze your trading performance.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Interactive Trading Calendar**: Visualize your trading days with P&L color-coding.
+- **Premium UI/UX**: Dark mode by default with glassmorphism effects and smooth transitions.
+- **Real-time Stats**: Track your Total P&L and Win Rate at a glance.
+- **Supabase Integration**: Secure authentication and persistent data storage.
+- **Mobile Friendly**: Fully responsive design that works on all your devices.
+- **Journal Management**: Create and switch between multiple trading journals.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend**: React, Vite, Framer Motion, date-fns, Lucide React
+- **Backend**: Supabase (Auth & Database)
+- **Styling**: Vanilla CSS with modern aesthetics
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. **Clone the repository**
+2. **Install dependencies**: `npm install`
+3. **Set up Environment Variables**: Create a `.env` file with your `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+4. **Run locally**: `npm run dev`
+
+## Deployment
+
+This site is optimized for deployment on GitHub Pages. Check the `.github/workflows/deploy.yml` for CI/CD configuration.
