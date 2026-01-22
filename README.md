@@ -1,5 +1,7 @@
 # TradeJournalFree
 
+**[Live Site](https://epicshardz.github.io/TradeJournalFree/)**
+
 A premium, high-performance trade tracking application designed for traders who value speed, aesthetics, and data persistence. Built with React and Supabase, it offers a seamless way to log, track, and analyze your trading performance.
 
 ## Features
