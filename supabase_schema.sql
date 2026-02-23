@@ -17,10 +17,16 @@ CREATE TABLE trades (
   user_id UUID REFERENCES auth.users NOT NULL,
   symbol TEXT NOT NULL,
   pnl DECIMAL NOT NULL,
+  num_wins INTEGER DEFAULT 0,
+  num_losses INTEGER DEFAULT 0,
   date TIMESTAMPTZ NOT NULL,
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- To add these columns to an EXISTING trades table, run:
+-- ALTER TABLE trades ADD COLUMN num_wins INTEGER DEFAULT 0;
+-- ALTER TABLE trades ADD COLUMN num_losses INTEGER DEFAULT 0;
 
 -- 3. Enable Row Level Security (RLS)
 ALTER TABLE journals ENABLE ROW LEVEL SECURITY;

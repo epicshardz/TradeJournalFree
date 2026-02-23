@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from './SupabaseAuthProvider';
 import { format, addMonths, subMonths, isSameMonth, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight, Plus, X, Trash2, Pencil, TrendingUp, Target } from 'lucide-react';
@@ -11,6 +11,7 @@ const Calendar = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTrade, setEditingTrade] = useState(null);
   const [shakingDay, setShakingDay] = useState(null);
+  const formRef = useRef(null);
   const [futureTip, setFutureTip] = useState({ show: false, x: 0, y: 0 });
 
   const activeJournal = journals.find(j => j.id === activeJournalId) || journals[0];
@@ -24,13 +25,15 @@ const Calendar = () => {
   const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
 
-  const handleAddTrade = async (e) => {
+  const handleAddTrade = async (e, addAnother = false) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const tradeData = {
       journal_id: activeJournalId,
       date: selectedDate.toISOString(),
       pnl: parseFloat(formData.get('pnl')),
+      num_wins: parseInt(formData.get('num_wins')) || 0,
+      num_losses: parseInt(formData.get('num_losses')) || 0,
       notes: formData.get('notes'),
       symbol: formData.get('symbol'),
     };
@@ -41,7 +44,13 @@ const Calendar = () => {
     } else {
       await addTrade(tradeData);
     }
-    setShowAddModal(false);
+
+    if (addAnother && !editingTrade) {
+      // Reset form but keep modal open
+      if (formRef.current) formRef.current.reset();
+    } else {
+      setShowAddModal(false);
+    }
   };
 
   const startEdit = (trade) => {
@@ -110,6 +119,13 @@ const Calendar = () => {
               const statusClass = dayPnL > 0 ? 'win' : dayPnL < 0 ? 'loss' : dayPnL === 0 && dayTrades.length > 0 ? 'neutral' : '';
               const isShaking = shakingDay === idx;
 
+              // Total individual trades: sum of wins+losses per entry, fallback to 1 per entry
+              const dayTradeCount = dayTrades.reduce((sum, t) => {
+                const w = Number(t.num_wins) || 0;
+                const l = Number(t.num_losses) || 0;
+                return sum + (w + l > 0 ? w + l : 1);
+              }, 0);
+
               return (
                 <div
                   key={idx}
@@ -118,7 +134,7 @@ const Calendar = () => {
                 >
                   <div className="box-top">
                     <span className="date-num">{format(day, 'd')}</span>
-                    {dayTrades.length > 0 && <span className="trade-badge">{dayTrades.length}</span>}
+                    {dayTradeCount > 0 && <span className="trade-badge">{dayTradeCount}</span>}
                   </div>
 
                   <div className="box-content">
@@ -164,6 +180,9 @@ const Calendar = () => {
                   <div className="details">
                     <span className="sym">{trade.symbol}</span>
                     <span className={`pnl ${trade.pnl >= 0 ? 'win' : 'loss'}`}>{formatCurrency(trade.pnl)}</span>
+                    {(trade.num_wins > 0 || trade.num_losses > 0) && (
+                      <span className="wl-badge">W:{trade.num_wins || 0} / L:{trade.num_losses || 0}</span>
+                    )}
                   </div>
                   <div className="actions">
                     <button onClick={() => startEdit(trade)} className="edit-btn"><Pencil size={14} /></button>
@@ -173,7 +192,7 @@ const Calendar = () => {
               ))}
             </div>
 
-            <form onSubmit={handleAddTrade} className="trade-form">
+            <form ref={formRef} onSubmit={(e) => handleAddTrade(e, false)} className="trade-form">
               <div className="form-subheader">
                 <h4>{editingTrade ? 'Edit entry' : 'Create new entry'}</h4>
               </div>
@@ -203,6 +222,30 @@ const Calendar = () => {
                   />
                 </div>
               </div>
+              <div className="f-row">
+                <div className="f-group">
+                  <label>Winning Trades</label>
+                  <input
+                    name="num_wins"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="0"
+                    defaultValue={editingTrade?.num_wins || 0}
+                  />
+                </div>
+                <div className="f-group">
+                  <label>Losing Trades</label>
+                  <input
+                    name="num_losses"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="0"
+                    defaultValue={editingTrade?.num_losses || 0}
+                  />
+                </div>
+              </div>
               <div className="f-group">
                 <label>Observation</label>
                 <textarea
@@ -211,10 +254,29 @@ const Calendar = () => {
                   defaultValue={editingTrade?.notes || ''}
                 ></textarea>
               </div>
-              <button type="submit" className="add-btn-submit" disabled={!activeJournalId}>
-                {editingTrade ? <Pencil size={18} /> : <Plus size={18} />}
-                {editingTrade ? 'Update Trade' : 'Record Trade'}
-              </button>
+              <div className="btn-row">
+                <button type="submit" className="add-btn-submit" disabled={!activeJournalId}>
+                  {editingTrade ? <Pencil size={18} /> : <Plus size={18} />}
+                  {editingTrade ? 'Update Trade' : 'Record Trade'}
+                </button>
+                {!editingTrade && (
+                  <button
+                    type="button"
+                    className="add-btn-another"
+                    disabled={!activeJournalId}
+                    onClick={(e) => {
+                      // Manually trigger form validation then submit
+                      const form = formRef.current;
+                      if (form && form.reportValidity()) {
+                        handleAddTrade({ preventDefault: () => {}, target: form }, true);
+                      }
+                    }}
+                  >
+                    <Plus size={18} />
+                    Record & Add Another
+                  </button>
+                )}
+              </div>
               {editingTrade && (
                 <button type="button" className="cancel-edit" onClick={() => setEditingTrade(null)}>
                   Cancel Edit
@@ -644,11 +706,39 @@ const Calendar = () => {
           color: white;
           font-size: 0.95rem;
           transition: all 0.3s ease;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .f-group input:focus {
           border-color: #3b82f6;
           outline: none;
+        }
+
+        .f-row {
+          display: flex;
+          gap: 1rem;
+        }
+
+        .f-row .f-group {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .wl-badge {
+          font-size: 0.7rem;
+          font-weight: 600;
+          color: #94a3b8;
+          background: rgba(255, 255, 255, 0.06);
+          padding: 2px 8px;
+          border-radius: 6px;
+          letter-spacing: 0.03em;
+        }
+
+        .btn-row {
+          display: flex;
+          gap: 0.75rem;
+          margin-top: 0.5rem;
         }
 
         .add-btn-submit {
@@ -657,7 +747,6 @@ const Calendar = () => {
           padding: 1rem;
           border-radius: 14px;
           font-weight: 700;
-          margin-top: 0.5rem;
           box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
           display: flex;
           align-items: center;
@@ -665,6 +754,30 @@ const Calendar = () => {
           gap: 0.5rem;
           cursor: pointer;
           border: none;
+          flex: 1;
+          font-size: 0.85rem;
+        }
+
+        .add-btn-another {
+          background: rgba(59, 130, 246, 0.12);
+          color: #60a5fa;
+          padding: 1rem;
+          border-radius: 14px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          cursor: pointer;
+          border: 1px solid rgba(59, 130, 246, 0.2);
+          flex: 1;
+          font-size: 0.85rem;
+          transition: all 0.3s ease;
+        }
+
+        .add-btn-another:hover {
+          background: rgba(59, 130, 246, 0.2);
+          border-color: rgba(59, 130, 246, 0.4);
         }
 
         .cancel-edit {
